@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  step_ca:
+    image: smallstep/step-ca
+    container_name: step_ca
+    restart: unless-stopped
+    volumes:
+      - step:/home/step
+      # needed for local host DNS
+      - /etc/hosts:/etc/hosts:ro
+    ports:
+      # just needed for testing
+      #- 9000:9000
+    environment:
+      - DOCKER_STEPCA_INIT_NAME=PurotoLab
+      - DOCKER_STEPCA_INIT_DNS_NAMES=step_ca
+      - DOCKER_STEPCA_INIT_PROVISIONER_NAME=stax
+      - DOCKER_STEPCA_INIT_SSH=yes
+      # - DOCKER_STEPCA_INIT_PASSWORD=secret
+  caddy:
+    image: caddy
+    container_name: caddy
+    restart: unless-stopped
+    volumes:
+      - $PWD/Caddyfile:/etc/caddy/Caddyfile:ro
+      - $PWD/root.cert:/root_ca.crt:ro
+      #- $PWD/site:/srv
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      - 80:80
+      - 443:443
+  nexus:
+    image: sonatype/nexus3
+    container_name: nexus
+    restart: unless-stopped
+    volumes:
+      - nexus_data:/nexus-data
+
+volumes:
+  step:
+    external: true
+  caddy_data:
+    external: true
+  caddy_config:
+  nexus_data:
+    external: true
